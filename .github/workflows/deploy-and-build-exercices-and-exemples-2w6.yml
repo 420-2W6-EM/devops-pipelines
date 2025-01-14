@@ -4,15 +4,6 @@
 name: CI/CD Pipeline
 on: [workflow_call]
 inputs:
-  DOCKER_PASSWORD:
-    description: 'Password for the Docker registry'
-    required: true
-  DOCKER_USERNAME:
-    description: 'Username for the Docker registry'
-    required: true
-  KUBECONFIG:
-    description: 'Kubeconfig file to access the Kubernetes cluster'
-    required: true
   DOCKER_REGISTRY:
     description: 'URL of the Docker registry'
     required: true
@@ -21,6 +12,16 @@ inputs:
     required: true
   DOCKER_REGISTRY_URL:
     description: 'URL of the Docker registry'
+    required: true
+secrets:
+  DOCKER_PASSWORD:
+    description: 'Password for the Docker registry'
+    required: true
+  DOCKER_USERNAME:
+    description: 'Username for the Docker registry'
+    required: true
+  KUBECONFIG:
+    description: 'Kubeconfig file to access the Kubernetes cluster'
     required: true
 
 jobs:
