@@ -21,15 +21,12 @@ on:
       DOCKER_PASSWORD:
         description: 'Password for the Docker registry'
         required: true
-        type: string 
       DOCKER_USERNAME:
         description: 'Username for the Docker registry'
         required: true
-        type: string 
       KUBECONFIG:
         description: 'Kubeconfig file to access the Kubernetes cluster'
         required: true
-        type: string 
 
 jobs:
 
