@@ -1,0 +1,105 @@
+# Pipeline utilisé par les enseignant
+# 
+# Sert à automatiser le déploiment continue des applications vers le cluster Kubernetes
+name: CI/CD Pipeline
+on: [workflow_call]
+inputs:
+  DOCKER_PASSWORD:
+    description: 'Password for the Docker registry'
+    required: true
+  DOCKER_USERNAME:
+    description: 'Username for the Docker registry'
+    required: true
+  KUBECONFIG:
+    description: 'Kubeconfig file to access the Kubernetes cluster'
+    required: true
+  DOCKER_REGISTRY:
+    description: 'URL of the Docker registry'
+    required: true
+  DOCKER_REGISTRY_TAG_PREFIX:
+    description: 'Prefix to use for the tags in the Docker registry'
+    required: true
+  DOCKER_REGISTRY_URL:
+    description: 'URL of the Docker registry'
+    required: true
+
+jobs:
+
+  build-image-and-deploy : # Pour l'instant une seule job, mais il est possible d'en ajouter d'autres (ex : tests unitaires, validation des vulnérabilités, etc)
+    runs-on: self-hosted   # Agent onprem à même le cluster Kubernetes pour réaliser l'exécution du build (machine linux)
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      
+    - name: Login into private image repository
+      run: |
+        buildah login -u ${{ inputs.DOCKER_USERNAME }} -p ${{ inputs.DOCKER_PASSWORD }} ${{ inputs.DOCKER_REGISTRY_URL }}
+
+    - name: Prepare variables for next steps
+      run: |
+        # Récupérer les valeurs du fichier cd-values.yml
+        namespace=$(grep "^namespace:" "cd-values.yml" | awk '{print $2}')
+        helmChatName=$(grep "^helmChat:" "cd-values.yml" | awk '{print $2}')
+        urlPrefix=$(grep "^host:" "cd-values.yml" | awk '{print $2}')
+        version=$(grep "^version:" "cd-values.yml" | awk '{print $2}')
+
+        # Déterminer le tag de l'image et l'URL pour accéder à l'application en fonction de la branche git
+        if [[ "${{ github.ref_name }}" == "main" ]]; then
+          branchTag="latest"
+          urlWithoutDomain=$urlPrefix
+        else
+          branchTag=$(echo "${{ github.ref_name }}" | tr '/' '-') # Remplacer les / par des - pour éviter les erreurs dans les noms de tags
+          urlWithoutDomain=$(echo "${urlPrefix}-${branchTag}")
+        fi
+        
+        # Calculer diverses valeurs utilisés pour le déploiement
+        urlComplete="${urlWithoutDomain}.4202w6.com"
+        lowercaseDockerRegistry=$(echo "${{ inputs.DOCKER_REGISTRY }}" | tr '[:upper:]' '[:lower:]')
+        lowercaseGitHubRepository=$(echo "${{ github.repository }}" | cut -d'/' -f2 | tr '[:upper:]' '[:lower:]')
+        imagePathInRepository="${lowercaseDockerRegistry}/${lowercaseGitHubRepository}"
+        tagVersion="${{ inputs.DOCKER_REGISTRY_TAG_PREFIX }}/${imagePathInRepository}:$version"
+        tagBranch="${{ inputs.DOCKER_REGISTRY_TAG_PREFIX }}/${imagePathInRepository}:$branchTag"
+        
+        # Rendre les variables disponibles pour les étapes suivantes
+        echo "namespace=$namespace" >> $GITHUB_ENV
+        echo "helmChatName=$helmChatName" >> $GITHUB_ENV
+        echo "urlPrefix=$urlPrefix" >> $GITHUB_ENV
+        echo "urlWithoutDomain=$urlWithoutDomain" >> $GITHUB_ENV
+        echo "urlComplete=$urlComplete" >> $GITHUB_ENV
+        echo "TAG_VERSION=${tagVersion}" >> $GITHUB_ENV
+        echo "TAG_BRANCH=${tagBranch}" >> $GITHUB_ENV
+        
+        # Afficher les valeurs pour vérification
+        echo "namespace=$namespace"
+        echo "helmChatName=$helmChatName"
+        echo "urlPrefix=$urlPrefix"
+        echo "urlWithoutDomain=$urlWithoutDomain"
+        echo "urlComplete=$urlComplete"
+        echo "tagVersion=$tagVersion"
+        echo "tagBranch=$tagBranch"
+        
+    - name: Build image locally # Docker ne peut pas être utilisé pour builder, car Kubernetes utilise ContainerD et le runner est un pod du cluster
+      run: | 
+        sudo buildah bud -f dockerfile -t ${{ env.TAG_BRANCH }} .
+        sudo buildah tag ${{ env.TAG_BRANCH }} ${{ env.TAG_VERSION }}
+
+    - name: Push the image to private image repository
+      run: |
+        buildah push ${{ env.TAG_BRANCH }} ${{ env.TAG_BRANCH }}
+        buildah push ${{ env.TAG_BRANCH }} ${{ env.TAG_VERSION }}
+      
+    - name: Setup Kubernetes config
+      run: |
+        echo "${{ inputs.KUBECONFIG }}" > /tmp/kube.config
+        echo "KUBECONFIG=/tmp/kube.config" >> $GITHUB_ENV
+
+    - name: Update Helm repo to get the latest version of the chart
+      run: |
+        helm repo add custom-helm-charts https://raw.githubusercontent.com/420-2w6-em/custom-helm-charts/refs/heads/main #TEMPORAIRE - DEVRAIT ÊTRE PRIVÉ
+        helm repo update
+        
+    - name: Install or upgrade the app with Helm
+      run: |
+        helm upgrade ${{ env.urlWithoutDomain }} ${{ env.helmChatName }}  -f ./cd-values.yml --install --set image=${{ env.TAG_BRANCH }} --set host=${{ env.urlComplete }} --namespace ${{ env.namespace }}
+        kubectl rollout restart deployment/${{ env.urlWithoutDomain }}-deployment --namespace ${{ env.namespace }}
