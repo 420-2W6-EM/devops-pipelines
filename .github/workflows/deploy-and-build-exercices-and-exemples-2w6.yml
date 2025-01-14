@@ -39,7 +39,7 @@ jobs:
       
     - name: Login into private image repository
       run: |
-        buildah login -u ${{ inputs.DOCKER_USERNAME }} -p ${{ inputs.DOCKER_PASSWORD }} ${{ inputs.DOCKER_REGISTRY_URL }}
+        buildah login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }} ${{ inputs.DOCKER_REGISTRY_URL }}
 
     - name: Prepare variables for next steps
       run: |
@@ -96,7 +96,7 @@ jobs:
       
     - name: Setup Kubernetes config
       run: |
-        echo "${{ inputs.KUBECONFIG }}" > /tmp/kube.config
+        echo "${{ secrets.KUBECONFIG }}" > /tmp/kube.config
         echo "KUBECONFIG=/tmp/kube.config" >> $GITHUB_ENV
 
     - name: Update Helm repo to get the latest version of the chart
