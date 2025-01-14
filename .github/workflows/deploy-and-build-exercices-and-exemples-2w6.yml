@@ -2,27 +2,28 @@
 # 
 # Sert à automatiser le déploiment continue des applications vers le cluster Kubernetes
 name: CI/CD Pipeline
-on: [workflow_call]
-inputs:
-  DOCKER_REGISTRY:
-    description: 'URL of the Docker registry'
-    required: true
-  DOCKER_REGISTRY_TAG_PREFIX:
-    description: 'Prefix to use for the tags in the Docker registry'
-    required: true
-  DOCKER_REGISTRY_URL:
-    description: 'URL of the Docker registry'
-    required: true
-secrets:
-  DOCKER_PASSWORD:
-    description: 'Password for the Docker registry'
-    required: true
-  DOCKER_USERNAME:
-    description: 'Username for the Docker registry'
-    required: true
-  KUBECONFIG:
-    description: 'Kubeconfig file to access the Kubernetes cluster'
-    required: true
+on: 
+  workflow_call:
+    inputs:
+      DOCKER_REGISTRY:
+        description: 'URL of the Docker registry'
+        required: true
+      DOCKER_REGISTRY_TAG_PREFIX:
+        description: 'Prefix to use for the tags in the Docker registry'
+        required: true
+      DOCKER_REGISTRY_URL:
+        description: 'URL of the Docker registry'
+        required: true
+    secrets:
+      DOCKER_PASSWORD:
+        description: 'Password for the Docker registry'
+        required: true
+      DOCKER_USERNAME:
+        description: 'Username for the Docker registry'
+        required: true
+      KUBECONFIG:
+        description: 'Kubeconfig file to access the Kubernetes cluster'
+        required: true
 
 jobs:
 
