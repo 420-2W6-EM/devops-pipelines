@@ -1,0 +1,43 @@
+# Pipeline utilisé par les enseignant
+# 
+# Sert à automatiquement créé les fichiers ZIP pour les exercices et exemples de la semaine
+name: CI/CD Pipeline
+on: 
+  workflow_call:
+    inputs:
+      CONFIG_FILENAME_FOR_THE_WEEK:
+        description: 'The name of the config file to use for the week, the file must be in the root of the repository'
+        required: true
+        type: string 
+
+jobs:
+
+  generate_zips_for_week_and_commit : 
+
+    runs-on: self-hosted   # Agent onprem à même le cluster Kubernetes pour réaliser l'exécution du build (machine linux)
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup python and run script
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13' 
+
+    - name: Set up virtual environment
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+
+    - name: Install dependency and run the python script to generate the ZIP files                                                                            
+      run: |  
+        pip install gitpython                                                  
+        python -u generate-zips-for-week.py ${{ inputs.CONFIG_FILENAME_FOR_THE_WEEK }} 
+        
+    - name: Copy the generated ZIP files from the output directory to the zip-generated directory
+      run: |
+        find output -maxdepth 1 -type f -name "*.zip" -exec cp {} zip-generated \;      
+
+    - name : Commit all changed files back to the repository                            
+      uses: stefanzweifel/git-auto-commit-action@v5
