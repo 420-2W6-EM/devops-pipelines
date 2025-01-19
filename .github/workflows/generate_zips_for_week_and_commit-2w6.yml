@@ -33,7 +33,7 @@ jobs:
     - name: Install dependency and run the python script to generate the ZIP files                                                                            
       run: |  
         pip install gitpython                                                  
-        python generate-zips-for-week.py ${{ inputs.CONFIG_FILENAME_FOR_THE_WEEK }} 
+        python -u generate-zips-for-week.py ${{ inputs.CONFIG_FILENAME_FOR_THE_WEEK }} 
         
     - name: Copy the generated ZIP files from the output directory to the zip-generated directory
       run: |
