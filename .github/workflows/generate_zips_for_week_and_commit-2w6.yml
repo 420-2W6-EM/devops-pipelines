@@ -14,7 +14,7 @@ jobs:
 
   generate_zips_for_week_and_commit : 
 
-    runs-on: ubuntu   # Agent onprem à même le cluster Kubernetes pour réaliser l'exécution du build (machine linux)
+    runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
