@@ -30,6 +30,11 @@ jobs:
         python -m venv venv
         source venv/bin/activate
 
+    - name: Set up Git config
+      run: | 
+        git config --global user.email "Runner@4202w6.com"
+        git config --global user.name "Runner"
+
     - name: Install dependency and run the python script to generate the ZIP files                                                                            
       run: |  
         pip install gitpython                                                  
