@@ -44,6 +44,8 @@ jobs:
     - name: Prepare variables for next steps
       run: |
         # Récupérer les valeurs du fichier cd-values.yml
+        apt install dos2unix
+        dos2unix cd-values.yml
         namespace=$(grep "^namespace:" "cd-values.yml" | awk '{print $2}')
         helmChatName=$(grep "^helmChat:" "cd-values.yml" | awk '{print $2}')
         urlPrefix=$(grep "^host:" "cd-values.yml" | awk '{print $2}')
