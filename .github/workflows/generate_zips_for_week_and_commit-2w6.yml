@@ -9,6 +9,10 @@ on:
         description: 'The name of the config file to use for the week, the file must be in the root of the repository'
         required: true
         type: string 
+    secrets:
+      GIT_TOKEN:
+        description: 'Github token'
+        required: true
 
 jobs:
 
@@ -38,7 +42,7 @@ jobs:
     - name: Install dependency and run the python script to generate the ZIP files                                                                            
       run: |  
         pip install gitpython                                                  
-        python -u generate-zips-for-week.py ${{ inputs.CONFIG_FILENAME_FOR_THE_WEEK }} 
+        python3 -u generate-zips-for-week.py -c ${{ inputs.CONFIG_FILENAME_FOR_THE_WEEK }} -t {{ secrets.GIT_TOKEN}} 
         
     - name: Copy the generated ZIP files from the output directory to the zip-generated directory
       run: |
