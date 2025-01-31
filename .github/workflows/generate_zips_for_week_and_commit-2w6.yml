@@ -41,7 +41,7 @@ jobs:
 
     - name: Install dependency and run the python script to generate the ZIP files                                                                            
       run: |  
-        apt install dos2unix
+        sudo apt install dos2unix
         pip install gitpython   
         python3 -u generate-zips-for-week.py -c ${{ inputs.CONFIG_FILENAME_FOR_THE_WEEK }} -t ${{ secrets.GIT_TOKEN}} 
         
