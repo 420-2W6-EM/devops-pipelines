@@ -50,9 +50,22 @@ jobs:
         mkdir -p versionsolution versiondepart
         rsync -av --exclude='./versionsolution' --exclude='./versiondepart' ./ versionsolution/
         rsync -av --exclude='./versionsolution' --exclude='./versiondepart' ./ versiondepart/
-        ls
-        cd versiondepart
-        ls
-        cd ..
-        cd versionsolution
-        ls
+
+
+    - name: Setup python and run script
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13' 
+
+    - name: Set up virtual environment
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+
+    - name: Install dependency and run the python script to generate the ZIP files                                                                            
+      run: |  
+        sudo apt install dos2unix
+        pip install gitpython   
+        python3 -u generator/generate-start-and-solution-version.py ./versionsolution -v versionsolution 
+        python3 -u generator/generate-start-and-solution-version.py ./versiondepart -v versiondepart
+        
