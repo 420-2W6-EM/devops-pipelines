@@ -17,6 +17,10 @@ on:
         description: 'URL of the Docker registry'
         required: true
         type: string 
+      VERSION_WANTED:
+        description: 'versiondepart or versionsolution'
+        required: true
+        type: string 
     secrets:
       DOCKER_PASSWORD:
         description: 'Password for the Docker registry'
@@ -47,9 +51,8 @@ jobs:
     - name: Copy code to directory 
       run: |
         sudo apt-get install rsync -y
-        mkdir -p versionsolution versiondepart
-        rsync -av --exclude='./versionsolution' --exclude='./versiondepart' ./ versionsolution/
-        rsync -av --exclude='./versionsolution' --exclude='./versiondepart' ./ versiondepart/
+        mkdir -p versiontransformed
+        rsync -av --exclude='./versiontransformed' ./ versiontransformed/
 
     - name: Setup python and run script
       uses: actions/setup-python@v5
@@ -64,7 +67,14 @@ jobs:
     - name: Install dependency and run the python script to generate the ZIP files                                                                            
       run: |  
         sudo apt install dos2unix
-        python3 -u generator/generate-start-and-solution-version.py -c ./generator/configuration-start-version.json ./versiondepart -v versiondepart 
+        if [[ "${{ input.VERSION_WANTED }}" == "versiondepart" ]]; then
+          python3 -u generator/generate-start-and-solution-version.py -c ./generator/configuration-start-version.json ./versiontransformed -v versiondepart 
+        elif [[ "${{ input.VERSION_WANTED }}" == "versionsolution" ]]; then
+          python3 -u generator/generate-start-and-solution-version.py -c ./generator/configuration-start-version.json ./versiontransformed -v versionsolution
+        else
+          echo "Invalid version"
+          exit 1
+        fi
         
     - name: Prepare variables for next steps
       run: |
@@ -78,10 +88,18 @@ jobs:
         # Déterminer le tag de l'image et l'URL pour accéder à l'application en fonction de la branche git
         if [[ "${{ github.ref_name }}" == "main" ]]; then
           branchTag="latest"
-          urlWithoutDomain=$(echo "${urlPrefix}-d")
+          if [[ "${{ input.VERSION_WANTED }}" == "versiondepart" ]]; then
+            urlWithoutDomain=$(echo "${urlPrefix}-d")
+          else
+            urlWithoutDomain=$(echo "${urlPrefix}")
+          fi
         else
           branchTag=$(echo "${{ github.ref_name }}" | tr '/' '-') # Remplacer les / par des - pour éviter les erreurs dans les noms de tags
-          urlWithoutDomain=$(echo "${urlPrefix}-d-${branchTag}")
+          if [[ "${{ input.VERSION_WANTED }}" == "versiondepart" ]]; then
+            urlWithoutDomain=$(echo "${urlPrefix}-d-${branchTag}")
+          else
+            urlWithoutDomain=$(echo "${urlPrefix}-${branchTag}")
+          fi
         fi
         
         # Calculer diverses valeurs utilisés pour le déploiement
@@ -112,7 +130,7 @@ jobs:
         
     - name: Build image locally # Docker ne peut pas être utilisé pour builder, car Kubernetes utilise ContainerD et le runner est un pod du cluster
       run: | 
-        cd versiondepart
+        cd versiontransformed
         sudo buildah bud -f dockerfile -t ${{ env.TAG_BRANCH }} .
         sudo buildah tag ${{ env.TAG_BRANCH }} ${{ env.TAG_VERSION }}
 
