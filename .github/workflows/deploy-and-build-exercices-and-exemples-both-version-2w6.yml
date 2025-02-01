@@ -65,7 +65,7 @@ jobs:
     - name: Install dependency and run the python script to generate the ZIP files                                                                            
       run: |  
         sudo apt install dos2unix
-        pip install gitpython   
-        python3 -u generator/generate-start-and-solution-version.py ./versionsolution -v versionsolution 
-        python3 -u generator/generate-start-and-solution-version.py ./versiondepart -v versiondepart
+        pip install gitpythond
+        python3 -u generator/generate-start-and-solution-version.py -c ./generator/configuration-start-version.json ./versionsolution -v versionsolution 
+        python3 -u generator/generate-start-and-solution-version.py -c ./generator/configuration-start-version.json ./versiondepart -v versiondepart
         
