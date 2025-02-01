@@ -42,6 +42,7 @@ jobs:
       with:
         repository: 420-2W6-EM/generate-zip
         path: generator
+        ref: main
       
     - name: Copy code to directory 
       run: |
