@@ -47,13 +47,11 @@ jobs:
     - name: Copy code to directory 
       run: |
         mkdir -p versionsolution versiondepart
-        cp -r $(ls -versionsolution | grep -v '^versionsolution$' | grep -v '^versiondepart$') versionsolution/
-        cp -r $(ls -versionsolution | grep -v '^versionsolution$' | grep -v '^versiondepart$') versiondepart/
+        rsync -av --exclude='./versionsolution' --exclude='./versiondepart' ./ versionsolution/
+        rsync -av --exclude='./versionsolution' --exclude='./versiondepart' ./ versiondepart/
         ls
         cd versiondepart
         ls
         cd ..
         cd versionsolution
-        ls
-        cd generator
         ls
