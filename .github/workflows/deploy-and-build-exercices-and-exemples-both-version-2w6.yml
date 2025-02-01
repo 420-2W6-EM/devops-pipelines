@@ -40,7 +40,7 @@ jobs:
     - name: Checkout code for the version generator (start version / solution version)
       uses: actions/checkout@v2
       with:
-        repository: 420-2W6-EM/generate-zip
+        repository: 420-2W6-EM/generate_zip
         path: generator
         ref: main
       
