@@ -1,0 +1,58 @@
+# Pipeline utilisé par les enseignant
+# 
+# Sert à automatiser le déploiment continue des applications vers le cluster Kubernetes
+name: CI/CD Pipeline
+on: 
+  workflow_call:
+    inputs:
+      DOCKER_REGISTRY:
+        description: 'URL of the Docker registry'
+        required: true
+        type: string 
+      DOCKER_REGISTRY_TAG_PREFIX:
+        description: 'Prefix to use for the tags in the Docker registry'
+        required: true
+        type: string 
+      DOCKER_REGISTRY_URL:
+        description: 'URL of the Docker registry'
+        required: true
+        type: string 
+    secrets:
+      DOCKER_PASSWORD:
+        description: 'Password for the Docker registry'
+        required: true
+      DOCKER_USERNAME:
+        description: 'Username for the Docker registry'
+        required: true
+      KUBECONFIG:
+        description: 'Kubeconfig file to access the Kubernetes cluster'
+        required: true
+
+jobs:
+
+  build-image-and-deploy : # Pour l'instant une seule job, mais il est possible d'en ajouter d'autres (ex : tests unitaires, validation des vulnérabilités, etc)
+    runs-on: self-hosted   # Agent onprem à même le cluster Kubernetes pour réaliser l'exécution du build (machine linux)
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Checkout code for the version generator (start version / solution version)
+      uses: actions/checkout@v2
+      with:
+        repository: 420-2W6-EM/generate-zip
+        path: generator
+      
+    - name: Copy code to directory 
+      run: |
+        mkdir -p versionsolution versiondepart
+        cp -r ./* versionsolution/
+        cp -r ./* versiondepart/
+        ls
+        cd versiondepart
+        ls
+        cd ..
+        cd versionsolution
+        ls
+        cd generator
+        ls
