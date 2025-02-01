@@ -67,9 +67,9 @@ jobs:
     - name: Install dependency and run the python script to generate the ZIP files                                                                            
       run: |  
         sudo apt install dos2unix
-        if [[ "${{ input.VERSION_WANTED }}" == "versiondepart" ]]; then
+        if [[ "${{ inputs.VERSION_WANTED }}" == "versiondepart" ]]; then
           python3 -u generator/generate-start-and-solution-version.py -c ./generator/configuration-start-version.json ./versiontransformed -v versiondepart 
-        elif [[ "${{ input.VERSION_WANTED }}" == "versionsolution" ]]; then
+        elif [[ "${{ inputs.VERSION_WANTED }}" == "versionsolution" ]]; then
           python3 -u generator/generate-start-and-solution-version.py -c ./generator/configuration-start-version.json ./versiontransformed -v versionsolution
         else
           echo "Invalid version"
@@ -88,14 +88,14 @@ jobs:
         # Déterminer le tag de l'image et l'URL pour accéder à l'application en fonction de la branche git
         if [[ "${{ github.ref_name }}" == "main" ]]; then
           branchTag="latest"
-          if [[ "${{ input.VERSION_WANTED }}" == "versiondepart" ]]; then
+          if [[ "${{ inputs.VERSION_WANTED }}" == "versiondepart" ]]; then
             urlWithoutDomain=$(echo "${urlPrefix}-d")
           else
             urlWithoutDomain=$(echo "${urlPrefix}")
           fi
         else
           branchTag=$(echo "${{ github.ref_name }}" | tr '/' '-') # Remplacer les / par des - pour éviter les erreurs dans les noms de tags
-          if [[ "${{ input.VERSION_WANTED }}" == "versiondepart" ]]; then
+          if [[ "${{ inputs.VERSION_WANTED }}" == "versiondepart" ]]; then
             urlWithoutDomain=$(echo "${urlPrefix}-d-${branchTag}")
           else
             urlWithoutDomain=$(echo "${urlPrefix}-${branchTag}")
