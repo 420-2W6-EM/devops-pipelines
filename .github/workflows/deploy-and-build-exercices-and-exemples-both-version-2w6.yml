@@ -46,7 +46,7 @@ jobs:
       
     - name: Copy code to directory 
       run: |
-        sudo apt-get install rsync
+        sudo apt-get install rsync -y
         mkdir -p versionsolution versiondepart
         rsync -av --exclude='./versionsolution' --exclude='./versiondepart' ./ versionsolution/
         rsync -av --exclude='./versionsolution' --exclude='./versiondepart' ./ versiondepart/
