@@ -142,11 +142,13 @@ jobs:
     - name: Push the image to private image repository
       run: |
         buildah push ${{ env.TAG_BRANCH }} ${{ env.TAG_BRANCH }}
-        sudo buildah rmi ${{ env.TAG_BRANCH }}
 
-    - name: Delete localy the image and logout of the repository
+    - name: Delete localy the image
       run: |
         sudo buildah rmi ${{ env.TAG_BRANCH }}
+        
+    - name: Logout of the repository
+      run: |
         buildah logout ${{ inputs.DOCKER_REGISTRY_URL }}
 
     - name: Setup Kubernetes config
