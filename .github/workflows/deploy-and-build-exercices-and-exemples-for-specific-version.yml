@@ -120,7 +120,6 @@ jobs:
         echo "urlPrefix=$urlPrefix" >> $GITHUB_ENV
         echo "urlWithoutDomain=$urlWithoutDomain" >> $GITHUB_ENV
         echo "urlComplete=$urlComplete" >> $GITHUB_ENV
-        echo "TAG_VERSION=${tagVersion}" >> $GITHUB_ENV
         echo "TAG_BRANCH=${tagBranch}" >> $GITHUB_ENV
         
         # Afficher les valeurs pour vérification
@@ -129,7 +128,6 @@ jobs:
         echo "urlPrefix=$urlPrefix"
         echo "urlWithoutDomain=$urlWithoutDomain"
         echo "urlComplete=$urlComplete"
-        echo "tagVersion=$tagVersion"
         echo "tagBranch=$tagBranch"
         
     - name: Build image locally # Docker ne peut pas être utilisé pour builder, car Kubernetes utilise ContainerD et le runner est un pod du cluster
@@ -137,14 +135,21 @@ jobs:
         cd versiontransformed
         sudo buildah images
         sudo buildah rmi ${{ env.TAG_BRANCH }}
+        sudo buildah images
         sudo buildah bud -f dockerfile -t ${{ env.TAG_BRANCH }} .
-        #sudo buildah tag ${{ env.TAG_BRANCH }} ${{ env.TAG_VERSION }}
+        
+    - name: Login into private image repository
+      run: |
+        buildah login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }} ${{ inputs.DOCKER_REGISTRY_URL }}
 
     - name: Push the image to private image repository
       run: |
         buildah push ${{ env.TAG_BRANCH }} ${{ env.TAG_BRANCH }}
-        #buildah push ${{ env.TAG_BRANCH }} ${{ env.TAG_VERSION }}
         sudo buildah rmi ${{ env.TAG_BRANCH }}
+
+    - name: Loout of the repository
+      run: |
+        buildah logout ${{ inputs.DOCKER_REGISTRY_URL }}
 
     - name: Setup Kubernetes config
       run: |
