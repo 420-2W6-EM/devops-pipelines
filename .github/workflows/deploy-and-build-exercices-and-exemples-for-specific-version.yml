@@ -133,9 +133,7 @@ jobs:
     - name: Build image locally # Docker ne peut pas être utilisé pour builder, car Kubernetes utilise ContainerD et le runner est un pod du cluster
       run: | 
         cd versiontransformed
-        sudo buildah images
         sudo buildah rmi ${{ env.TAG_BRANCH }}
-        sudo buildah images
         sudo buildah bud -f dockerfile -t ${{ env.TAG_BRANCH }} .
         
     - name: Login into private image repository
@@ -147,8 +145,9 @@ jobs:
         buildah push ${{ env.TAG_BRANCH }} ${{ env.TAG_BRANCH }}
         sudo buildah rmi ${{ env.TAG_BRANCH }}
 
-    - name: Loout of the repository
+    - name: Delete localy the image and logout of the repository
       run: |
+        sudo buildah rmi ${{ env.TAG_BRANCH }}
         buildah logout ${{ inputs.DOCKER_REGISTRY_URL }}
 
     - name: Setup Kubernetes config
